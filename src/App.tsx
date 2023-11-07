@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React from "react";
-import { Button, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 function App(){
   return (
@@ -18,6 +18,9 @@ function App(){
         <TouchableOpacity style={styles.button}>
         <Text style={styles.soz}>Discover The Course</Text>
         </TouchableOpacity>
+      </View>
+      <View>
+        <Text style={styles.finish}>Not now</Text>
       </View>
     </SafeAreaView>
   );
@@ -53,13 +56,19 @@ const styles=StyleSheet.create({
     justifyContent:'center',
     alignItems: 'center',
     backgroundColor: 'black',
-    padding: 30,
-    marginTop:77,
+    padding: 22,
+    marginTop:67,
     width:284,
-
-    
+    borderRadius:10
   },
   soz:{
     color:"white",
-  }
+  },
+  finish: {
+    fontSize:16,
+    textAlign:'center',
+    justifyContent:'center',
+    marginTop:30,
+    color:"grey",
+  },
 })
