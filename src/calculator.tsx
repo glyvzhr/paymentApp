@@ -1,147 +1,318 @@
-import {View,StyleSheet,SafeAreaView,Text,TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  useWindowDimensions,
+  TouchableOpacity,
+} from 'react-native';
 
-const arrButtons = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', ','];
-const arrOperators = ['+', '-', '*', '/'];
+const Button = ({
+  w = 0,
+  h = null,
+  text = '',
+  backgroundColor = '#333333',
+  textColor = 'white',
+  onPress = () => {},
+}) => {
+  const height = h ?? w;
+  const width = w;
 
-function Calculator() {
-  const [firstNumber, setFirstNumber] = useState('');
-  const [secondNumber, setSecondNumber] = useState('');
+  return (
+    <View style={[styles.buttonContainer, {width: width, height: height}]}>
+      <TouchableOpacity
+        style={[styles.button, {backgroundColor: backgroundColor}]}
+        onPress={() => onPress(text)}>
+        <Text style={[styles.buttonText, {color: textColor}]}>{text}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const Calculator = () => {
+  const {width} = useWindowDimensions();
+  const buttonContainerWidth = width / 4 - 5;
+  const [firstValue, setFirstValue] = useState('');
   const [operator, setOperator] = useState('');
-  const [result, setResult] = useState('0');
-  console.log('1', firstNumber);
-  console.log('2', operator);
-  console.log('3', secondNumber);
+  const [secondValue, setSecondValue] = useState('');
+  const [clearLabel, setClearLabel] = useState('AC');
 
-  const checkOperator = (a, b, opr) => {
-    switch (opr) {
-      case '+':
-        return +a + +b;
-      case '-':
-        return +a - +b;
-      case '*':
-        return +a * +b;
+  const onKeyPress = key => {
+    switch (key) {
+      case 'AC':
+        setFirstValue('');
+        setOperator('');
+        setSecondValue('');
+        break;
+      case 'C':
+        if (secondValue !== '') {
+          setSecondValue('');
+        } else {
+          setFirstValue('');
+        }
+
+        setClearLabel('AC');
+        break;
+      case '+/-':
+        if (firstValue !== '' || secondValue !== '') {
+          if (firstValue !== '' && secondValue === '') {
+            setFirstValue(parseFloat(firstValue * -1).toString());
+          } else {
+            setSecondValue(parseFloat(secondValue * -1).toString());
+          }
+        }
+        break;
+      case '%':
+        calculate(firstValue, key, secondValue);
+        break;
       case '/':
-        return +a / +b;
-      default:
+      case 'x':
+      case '-':
+      case '+':
+        if (secondValue !== '') {
+          calculate(firstValue, operator, secondValue);
+        } else {
+          setOperator(key);
+        }
+        break;
+      case '=':
+        calculate(firstValue, operator, secondValue);
+        break;
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+      case '0':
+      case ',':
+        setClearLabel('C');
+        if (operator === '') {
+          setFirstValue(e => `${e}${key}`);
+        } else {
+          setSecondValue(e => `${e}${key}`);
+        }
         break;
     }
   };
-  const numberPress = (num: string) => {
-    if (!secondNumber && !operator) {
-      setFirstNumber(firstNumber + num);
-      setResult(firstNumber + num);
-    } else if (operator) {
-      setSecondNumber(secondNumber + num);
-      setResult(secondNumber + num);
+
+  const getDisplayText = () => {
+    if (secondValue !== '') {
+      return secondValue;
     }
-  };
-  const operatorPress = (opr: string) => {
-    if (firstNumber && secondNumber) {
-      const oprResult = checkOperator(firstNumber, secondNumber, operator);
-      setResult(oprResult);
-      setFirstNumber(oprResult);
-      setSecondNumber('');
-      setOperator('');
+    if (firstValue === '') {
+      return '0';
     }
-    console.log(opr);
-    setOperator(opr);
+
+    return firstValue;
   };
+
+  const calculate = (a = '', o = '', b = '') => {
+    let result = 0;
+
+    a = a.replace(',', '.');
+    b = b.replace(',', '.');
+
+    switch (o) {
+      case '%':
+        result = parseFloat(a) / 100;
+        break;
+      case '/':
+        result = parseFloat(a) / parseFloat(b);
+        break;
+      case 'x':
+        result = parseFloat(a) * parseFloat(b);
+        break;
+      case '-':
+        result = parseFloat(a) - parseFloat(b);
+        break;
+      case '+':
+        result = parseFloat(a) + parseFloat(b);
+        break;
+    }
+
+    if (result % 1 !== 0) {
+      const digitsValue = result.toString().split('.')[1];
+      if (digitsValue.length > 6) {
+        result = result.toFixed(6);
+      }
+    }
+
+    result = result.toString().replace('.', ',');
+
+    setFirstValue(result);
+    setOperator('');
+    setSecondValue('');
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.result}>
-        <Text style={styles.resultText}>{result}</Text>
+    <View style={styles.container}>
+      <View style={styles.displayContainer}>
+        <Text style={styles.displayText}>{getDisplayText()}</Text>
       </View>
-      <View style={styles.actionArea} />
-      <View style={styles.main}>
-      <View style={styles.buttons}>
-        {arrButtons.map((item, index) => {
-          return (
-            <TouchableOpacity
-              key={index}
-              style={styles.button}
-              onPress={() => numberPress(item)}>
-              <Text style={styles.buttonText}>{item}</Text>
-            </TouchableOpacity>
-          );
-        })}
+      <View style={styles.buttonsContainer}>
+        <View style={styles.buttonsRow}>
+          <Button
+            w={buttonContainerWidth}
+            text={clearLabel}
+            backgroundColor={'#A5A5A5'}
+            textColor={'#000'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'+/-'}
+            backgroundColor={'#A5A5A5'}
+            textColor={'#000'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'%'}
+            backgroundColor={'#A5A5A5'}
+            textColor={'#000'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'/'}
+            backgroundColor={'#FF9F0A'}
+            onPress={key => onKeyPress(key)}
+          />
+        </View>
+        <View style={styles.buttonsRow}>
+          <Button
+            w={buttonContainerWidth}
+            text={'7'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'8'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'9'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'x'}
+            backgroundColor={'#FF9F0A'}
+            onPress={key => onKeyPress(key)}
+          />
+        </View>
+        <View style={styles.buttonsRow}>
+          <Button
+            w={buttonContainerWidth}
+            text={'4'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'5'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'6'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'-'}
+            backgroundColor={'#FF9F0A'}
+            onPress={key => onKeyPress(key)}
+          />
+        </View>
+        <View style={styles.buttonsRow}>
+          <Button
+            w={buttonContainerWidth}
+            text={'1'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'2'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'3'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'+'}
+            backgroundColor={'#FF9F0A'}
+            onPress={key => onKeyPress(key)}
+          />
+        </View>
+        <View style={styles.buttonsRow}>
+          <Button
+            w={width / 2 - 10}
+            h={buttonContainerWidth}
+            text={'0'}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={','}
+            onPress={key => onKeyPress(key)}
+          />
+          <Button
+            w={buttonContainerWidth}
+            text={'='}
+            backgroundColor={'#FF9F0A'}
+            onPress={key => onKeyPress(key)}
+          />
+        </View>
       </View>
-      <View style={styles.oprArea}>
-        {arrOperators.map((item, index) => {
-          return (
-            <TouchableOpacity
-              key={index}
-              style={styles.oprButton}
-              onPress={() => operatorPress(item)}>
-              <Text style={styles.buttonText}>{item}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-      </View>
-    </SafeAreaView>
+    </View>
   );
-}
-export default Calculator;
+};
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: '#000',
     flex: 1,
-    backgroundColor: 'black',
   },
-  main:{
-    flexDirection:"row",
-    width:"100%",
-    height:"60%"
+  displayContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 30,
   },
-  result:{
-    height:"40%",
-    backgroundColor:"black",
-    justifyContent:"flex-end",
-    alignItems:"flex-end",
-  },
-  resultText: {
-    fontSize: 90,
+  displayText: {
+    fontSize: 70,
     color: 'white',
-    fontWeight: '300',
-    marginRight:20,
   },
-  buttons: {
+  buttonsContainer: {
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    paddingBottom: 30,
+  },
+  buttonsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '74%',
-    justifyContent: 'center',
+  },
+  buttonContainer: {
+    padding: 10,
   },
   button: {
-    width: '31%',
-    height: "22%",
-    margin:3.2,
-    backgroundColor: 'grey',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: '100%',
+    height: '100%',
     borderRadius: 100,
-  },
-  oprButton: {
-    width: '90%',
-    height:"22%",
-    margin:4,
-    backgroundColor: 'orange',
-    justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 100,
+    justifyContent: 'center',
   },
   buttonText: {
-    fontSize: 40,
     color: 'white',
-  },
-  actionArea: {
-    flexDirection: 'row',
-    width: '100%',
-    flex: 1,
-  },
-  oprArea: {
-    width: '26%',
-    alignItems: 'center',
-    flexWrap:"wrap",
+    fontSize: 25,
   },
 });
+
+export default Calculator;
