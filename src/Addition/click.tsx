@@ -12,6 +12,7 @@ function New(){
     }
 
 
+
     return(
     <SafeAreaView style={styles.main}>
         <Text style={styles.name}>{data}</Text>

@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import React from "react";
 import { SafeAreaView, StyleSheet, View, Image, Text, TouchableOpacity, } from "react-native"
-function New (){
+function Card (){
     return(
         <SafeAreaView style={styles.area}>
             <View style={styles.header}>
@@ -52,7 +52,7 @@ function New (){
         </SafeAreaView>
     )
 }
-export default New
+export default Card
 
 const styles=StyleSheet.create({
     area:{
